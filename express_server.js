@@ -14,20 +14,25 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+app.get("/hello", (req, res) => {
+  res.send("<html><body>Hello <b>World</b></body></html>\n"); // < World is bold
+});
+
+app.get("/urls.json", (req, res) => { // ?why is 'json' there?
+  res.json(urlDatabase); // < Shows urlDatabase obj on new site/page.
+});
 
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase} // < templateVars is now urls which = the urlDatabase obj
   res.render("urls_index", templateVars);
 })
 
-app.get("/urls.json", (req, res) => { // ?why is 'json' there?
-  res.json(urlDatabase); // < Shows urlDatabase obj on new site/page.
+app.get("/urls/:id", (req, res) => {
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id]}; // < longUrl = objName[ID but with the req.params before it]
+  res.render("urls_show", templateVars);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n"); // < World is bold
-});
-
+// Listening
 app.listen(PORT, () => {
   console.log(`Server is listeing on port ${PORT}`);
 });
