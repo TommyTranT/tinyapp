@@ -8,7 +8,10 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 
 // Data
-function generateRandomString() {}
+const generateRandomString = () => {
+  let result = (Math.random() + 1).toString(36).substring(6);
+  return result;
+}
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -43,9 +46,12 @@ app.get("/urls/:id", (req, res) => {
 });
 
 // Post
+// Update your express server so that the id-longURL key-value pair are saved to the urlDatabase when it receives a POST request to /urls
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+const id = generateRandomString();
+urlDatabase[id] = req.body.longURL 
+res.redirect("/urls")
+
 });
 
 
