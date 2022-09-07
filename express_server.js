@@ -1,61 +1,78 @@
-// Express is our web framework for our server
+// SETUP
+
 const express = require("express"); 
+const morgan = require('morgan')
 const app = express();
 const PORT = 8080;
 
-// Requirements
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 
-// Data
-const generateRandomString = () => {
-  let result = (Math.random() + 1).toString(36).substring(6);
-  return result;
-}
-
+//-----------------------------------------------------------------------------------
+// Original Object
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 }
 
+// Random ID generator
+const generateRandomString = () => {
+  let result = (Math.random() + 1).toString(36).substring(6);
+  return result;
+}
+
 // Routes
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
+// Homepage of tinyapp: lists all urls
+app.get("/urls", (req, res) => { // -> urls refers to our original object
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n"); // < World is bold
-});
-
-app.get("/urls.json", (req, res) => { // ?why is 'json' there?
-  res.json(urlDatabase); // < Shows urlDatabase obj on new site/page.
-});
-
-app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase} // < templateVars is now urls which = the urlDatabase obj
-  res.render("urls_index", templateVars);
+  const templateVars = { 
+    urls: urlDatabase
+  }
+ 
+  res.render("urls_index", templateVars); // -> Take this template and this data and mash them together
 })
 
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+// New URL Page: lets make a new short url
+app.get("/urls/new", (req, res) => { 
+  res.render("urls_new"); // -> Take this page and render it
 });
 
-app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id]}; // < longUrl = objName[ID but with the req.params before it]
-  res.render("urls_show", templateVars);
-});
-
-// Post
-// Update your express server so that the id-longURL key-value pair are saved to the urlDatabase when it receives a POST request to /urls
+// Gives new longURL a new ID and adds to our object
 app.post("/urls", (req, res) => {
-const id = generateRandomString();
-urlDatabase[id] = req.body.longURL 
-res.redirect("/urls")
-
+  const id = generateRandomString(); // -> id is a random string with our helper function
+  urlDatabase[id] = req.body.longURL  // -> let our object[new id key] to equal the new longURL we made from our post request
+  res.redirect("/urls") // -> redirect us back to display all of our urls
 });
 
+// Make a variable page for each different "id" in our object
+app.get("/urls/:id", (req, res) => { // -> ":id" is our variable for our different keys
+  
+  const templateVars = { 
+    id: req.params.id, // -> our page will go to whatever id they inputed. 
+    longURL: urlDatabase[req.params.id]};  // < obj[key] will get our longURL value
+   
+  res.render("urls_show", templateVars); // -> take that template and this data and mash them together
+});
 
+// DELETE - POST /breads/:breadId/delete
+app.post('/urls/:id/delete', (req, res) => {
+  const id = req.params.id; // -> the button should correspond with the id key
+
+  delete urlDatabase[id]; // -> deletes the key that matches our database
+
+  res.redirect('/urls'); // -> redirect back to urls
+})
+
+
+
+//-----------------------------------------------------------------------------------
 // Listening
 app.listen(PORT, () => {
   console.log(`Server is listeing on port ${PORT}`);
 });
+
+//-----------------------------------------------------------------------------------
+// Notes
+// Add a homepage?
+// Delete button is not in the right position
