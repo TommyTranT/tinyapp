@@ -29,7 +29,9 @@ app.get("/urls", (req, res) => { // -> urls refers to our original object
   const templateVars = { 
     urls: urlDatabase
   }
- 
+  
+  console.log(urlDatabase)
+
   res.render("urls_index", templateVars); // -> Take this template and this data and mash them together
 })
 
@@ -49,11 +51,34 @@ app.post("/urls", (req, res) => {
 app.get("/urls/:id", (req, res) => { // -> ":id" is our variable for our different keys
   
   const templateVars = { 
-    id: req.params.id, // -> our page will go to whatever id they inputed. 
+    id: req.params.id, // -> our page will go to whatever 'id' they inputed. 
     longURL: urlDatabase[req.params.id]};  // < obj[key] will get our longURL value
    
   res.render("urls_show", templateVars); // -> take that template and this data and mash them together
 });
+
+// Edit GET
+// app.get("/urls/:id", (req, res) => { // -> ":id" is our variable for our different keys
+  
+//   const templateVars = { 
+//     id: req.params.id, // -> our page will go to whatever 'id' they inputed. 
+//     longURL: urlDatabase[req.params.id]};  // < obj[key] will get our longURL value
+   
+//     res.redirect('/urls'); // -> take that template and this data and mash them together
+// });
+
+// Edit POST
+app.post('/urls/:id', (req, res) => {
+  const id = req.params.id;
+
+  const newLongURL = req.body.newLongURL; 
+
+  urlDatabase[id] = newLongURL
+
+  console.log(urlDatabase);
+
+  res.redirect(`/urls`);
+})
 
 // DELETE - POST /breads/:breadId/delete
 app.post('/urls/:id/delete', (req, res) => {
@@ -63,8 +88,6 @@ app.post('/urls/:id/delete', (req, res) => {
 
   res.redirect('/urls'); // -> redirect back to urls
 })
-
-
 
 //-----------------------------------------------------------------------------------
 // Listening
@@ -76,3 +99,4 @@ app.listen(PORT, () => {
 // Notes
 // Add a homepage?
 // Delete button is not in the right position
+// Short url is hyperlink but doesnt take me anywhere
