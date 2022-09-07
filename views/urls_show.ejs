@@ -17,7 +17,21 @@
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">
-          Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
+          Short URL ID: <a href="<%= longURL %>"><%= id %></a>
+
+        <!-- Lets make an Edit bar and button to edit long URLS -->
+        <h5 class="card-title">Edit</h5>
+
+        <form action="/urls/<%= id %>" method="POST">  <!-- We want to POST in the urls/:id page -->
+          <label>Edit Long URL:</label>
+          <input 
+            name="newLongURL" 
+            value="<%= longURL %>" 
+          />
+          <button type="submit">Submit</button> <!-- Make button send request to server -->
+        </form>
+          
+
         </p>
       </div>
       <div class="card-footer text-muted"></div>

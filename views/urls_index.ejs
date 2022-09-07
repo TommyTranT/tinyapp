@@ -23,21 +23,29 @@
       <table class="table">
         <thead>
           <tr>
-            <th scope="col">Short URL ID</th>
+            <th scope="col">Short URL ID</th> 
             <th scope="col">Long URL</th>
-            <!-- <th scope="col">Delete</th>   Adds delete in third column    -->
+            <th scope="col">Edit</th>   
+            <th scope="col">Delete</th>  
           </tr>
         </thead>
         <tbody>
           <% for (let id in urls) { %> <!-- Loop through each key in our object -->
             <tr>
-              <td><%= id %>
-              <td><%= urls[id] %>
-
+              <td><%= id %></td>
+              <td><%= urls[id] %></td>
+              <td>
                 <!-- Lets make a delete button! -->
-                <form action = "/urls/<%= id %>/delete" method="POST"> <!-- Notice the javascript code to change the variable id to each key -->
-                  <button type="submit">Delete</button>
+                <form action = "/urls/<%= id %>" method="GET"> 
+                  <button class="btn btn-outline-info" type="submit">Edit</button>
                 </form>
+              </td>
+              <td>
+                <form action = "/urls/<%= id %>/delete" method="POST"> 
+                  <button class="btn btn-outline-danger" type="submit">Delete</button>
+                </form>
+              </td>
+
 
             </tr>
           <% } %>
