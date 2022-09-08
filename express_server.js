@@ -1,5 +1,4 @@
 // SETUP
-
 const cookieParser = require("cookie-parser");
 const express = require("express"); 
 const morgan = require('morgan')
@@ -7,6 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.set('view engine', 'ejs');
+app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(cookieParser());
@@ -21,7 +21,8 @@ const urlDatabase = {
 // Set Empty Users OBJ
 const users = {};
 
-// Random ID generator
+// Functions
+// Generates a random ID
 const generateRandomString = () => {
   let result = (Math.random() + 1).toString(36).substring(6);
   return result;
@@ -31,8 +32,13 @@ const generateRandomString = () => {
 // Homepage of tinyapp: lists all urls
 app.get("/urls", (req, res) => { // -> urls refers to our original object
 
+  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+
+  const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
+
   const templateVars = { 
-    urls: urlDatabase
+    urls: urlDatabase,
+    user: user
   }
   
   console.log(urlDatabase)
@@ -42,6 +48,7 @@ app.get("/urls", (req, res) => { // -> urls refers to our original object
 
 // GET /register    -> User gives us username and password info
 app.get('/register', (req, res) => {
+
   res.render('register');
 })
 
@@ -86,7 +93,6 @@ app.post('/login', (req, res) => {
       foundUser = user; // -> variable foundUser will equal the user info that was inputed.
     }
   }
-
   // If the user did not match
   if (!foundUser) {
     return res.status(403).send('no user with that email exists');
@@ -100,7 +106,7 @@ app.post('/login', (req, res) => {
   res.cookie('userId', foundUser.id); // -> setting our cookie to equal the 'id' we randomly generated for each user
 
   // send user somewhere
-  res.redirect('/protected');
+  res.redirect('/urls');
 });
 
 // GET /protected
@@ -113,7 +119,8 @@ app.get('/protected', (req, res) => {
   const templateVars = {
     user: user // -> can use user.email, user.password, or user.id in the template file because we put the whole obj in
   };
-  
+
+  console.log(users);
   res.render('protected', templateVars);
 });
 
@@ -126,7 +133,15 @@ app.post('/logout', (req, res) => {
 
 // New URL Page: lets make a new short url
 app.get("/urls/new", (req, res) => { 
-  res.render("urls_new"); // -> Take this page and render it
+  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+
+  const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
+
+  const templateVars = { 
+    user: user
+  }
+
+  res.render("urls_new", templateVars); // -> Take this page and render it
 });
 
 // Gives new longURL a new ID and adds to our object
