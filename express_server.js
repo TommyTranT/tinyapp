@@ -1,13 +1,15 @@
 // SETUP
 
+const cookieParser = require("cookie-parser");
 const express = require("express"); 
 const morgan = require('morgan')
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+app.use(cookieParser());
 
 //-----------------------------------------------------------------------------------
 // Original Object
@@ -15,6 +17,9 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 }
+
+// Set Empty Users OBJ
+const users = {};
 
 // Random ID generator
 const generateRandomString = () => {
@@ -33,6 +38,90 @@ app.get("/urls", (req, res) => { // -> urls refers to our original object
   console.log(urlDatabase)
 
   res.render("urls_index", templateVars); // -> Take this template and this data and mash them together
+})
+
+// GET /register    -> User gives us username and password info
+app.get('/register', (req, res) => {
+  res.render('register');
+})
+
+// POST /register   -> lets take the inputed data and save it in our own object
+app.post('/register', (req, res) => {
+  const email = req.body.email; // -> let 'email' be the input we revieved when they typed the email
+  const password = req.body.password;
+  const id = Math.random().toString(36).substring(2,6) // -> ID to identify this paticular user
+
+  const user = { // -> putting all of the info into an object
+    id: id,
+    email: email,
+    password: password,
+  };
+
+  users[id] = user; // -> update our users object with this user. (updating id, email, password)
+  console.log(users)
+
+  res.redirect('/login');
+});
+
+// GET /login
+app.get('/login', (req, res) => {
+  res.render('login');
+})
+
+// POST /login
+app.post('/login', (req, res) => {
+  const email = req.body.email; // -> let email be the email they inputted
+  const password = req.body.password;
+
+  // Handle negatives first
+  if (!email || !password) { // -> If they didnt give an email or password,
+    return res.status(400).send('please enter an email address AND a password') // -> return error 400, bad request
+  }
+
+  // Look up the user in the users database
+  let foundUser = null;
+  for (const userId in users) { // -> loop in each user in 'users' obj
+    const user = users[userId]; // -> let variable 'user' equal our [obj][user key]
+    if (user.email === email) { // -> if the email in our database is equal to what the user typed,
+      foundUser = user; // -> variable foundUser will equal the user info that was inputed.
+    }
+  }
+
+  // If the user did not match
+  if (!foundUser) {
+    return res.status(403).send('no user with that email exists');
+  }
+
+  // Check if passwords match
+  if (foundUser.password !== password) { // -> if the users password does not equal what was inputed,
+    return res.status(401).send('wrong password'); // -> return error message
+  }
+  // We found a user, now we need to set the cookie
+  res.cookie('userId', foundUser.id); // -> setting our cookie to equal the 'id' we randomly generated for each user
+
+  // send user somewhere
+  res.redirect('/protected');
+});
+
+// GET /protected
+app.get('/protected', (req, res) => {
+  console.log(req.cookies);
+  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+
+  const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
+
+  const templateVars = {
+    user: user // -> can use user.email, user.password, or user.id in the template file because we put the whole obj in
+  };
+  
+  res.render('protected', templateVars);
+});
+
+// POST /logout  
+app.post('/logout', (req, res) => {
+  res.clearCookie('userId');
+
+  res.redirect('/urls');
 })
 
 // New URL Page: lets make a new short url
@@ -56,16 +145,6 @@ app.get("/urls/:id", (req, res) => { // -> ":id" is our variable for our differe
    
   res.render("urls_show", templateVars); // -> take that template and this data and mash them together
 });
-
-// Edit GET
-// app.get("/urls/:id", (req, res) => { // -> ":id" is our variable for our different keys
-  
-//   const templateVars = { 
-//     id: req.params.id, // -> our page will go to whatever 'id' they inputed. 
-//     longURL: urlDatabase[req.params.id]};  // < obj[key] will get our longURL value
-   
-//     res.redirect('/urls'); // -> take that template and this data and mash them together
-// });
 
 // Edit POST
 app.post('/urls/:id', (req, res) => {
