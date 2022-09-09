@@ -47,8 +47,14 @@ app.get("/urls", (req, res) => { // -> urls refers to our original object
 
 // GET /register    -> User gives us username and password info
 app.get('/register', (req, res) => {
+  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
 
-  res.render('register');
+  const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
+
+  const templateVars = { 
+    user: user
+  }
+  res.render('register', templateVars);
 })
 
 // POST /register   -> lets take the inputed data and save it in our own object
@@ -71,7 +77,14 @@ app.post('/register', (req, res) => {
 
 // GET /login
 app.get('/login', (req, res) => {
-  res.render('login');
+  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+
+  const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
+
+  const templateVars = { 
+    user: user
+  }
+  res.render('login', templateVars);
 })
 
 // POST /login
@@ -142,7 +155,8 @@ app.get("/urls/new", (req, res) => {
   // IF userId is null, return 403 error message,
     if(!userId) { // -> checks to see if the cookie still exist. If cookie is deleted, userId will not exist
       res.status(403)
-      return res.send('You need to sign in')
+      return res.redirect('/login')
+      // return res.status(403).send('Please login to create new short URL')
     }
 
   res.render("urls_new", templateVars); // -> Take this page and render it
@@ -157,8 +171,16 @@ app.post("/urls", (req, res) => {
 
 // Make a variable page for each different "id" in our object
 app.get("/urls/:id", (req, res) => { // -> ":id" is our variable for our different keys
+  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+  const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
+ 
+  if(!urlDatabase[req.params.id]) { // -> checks to see if the cookie still exist. If cookie is deleted, userId will not exist
+    res.status(403)
+    return res.status(400).send('please enter a valid short url')
+  }
   
   const templateVars = { 
+    user: user,
     id: req.params.id, // -> our page will go to whatever 'id' they inputed. 
     longURL: urlDatabase[req.params.id]};  // < obj[key] will get our longURL value
    
