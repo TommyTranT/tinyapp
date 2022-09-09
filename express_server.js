@@ -28,6 +28,24 @@ const generateRandomString = () => {
 }
 
 // Routes
+// GET / 
+app.get('/', (req, res) => {
+  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+
+  const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
+
+  const templateVars = { 
+    user: user
+  }
+
+   // If not logged in, take them to login page. If logged in, go to urls
+   if(!userId) { // -> checks to see if the cookie still exist. If cookie is deleted, userId will not exist
+    return res.redirect('/login')
+  }
+
+  res.redirect('/urls')
+})
+
 // Homepage of tinyapp: lists all urls
 app.get("/urls", (req, res) => { // -> urls refers to our original object
 
@@ -241,6 +259,4 @@ app.listen(PORT, () => {
 
 //-----------------------------------------------------------------------------------
 // Notes
-// Add a homepage?
-// Delete button is not in the right position
 // Short url is hyperlink but doesnt take me anywhere
