@@ -21,7 +21,6 @@ const urlDatabase = {
 // Set Empty Users OBJ
 const users = {};
 
-// Functions
 // Generates a random ID
 const generateRandomString = () => {
   let result = (Math.random() + 1).toString(36).substring(6);
@@ -140,6 +139,11 @@ app.get("/urls/new", (req, res) => {
   const templateVars = { 
     user: user
   }
+  // IF userId is null, return 403 error message,
+    if(!userId) { // -> checks to see if the cookie still exist. If cookie is deleted, userId will not exist
+      res.status(403)
+      return res.send('You need to sign in')
+    }
 
   res.render("urls_new", templateVars); // -> Take this page and render it
 });
