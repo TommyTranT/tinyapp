@@ -54,6 +54,12 @@ app.get('/register', (req, res) => {
   const templateVars = { 
     user: user
   }
+
+  // IF they try to go to the register page while logged in, redirect to urls
+  if(userId) { // -> checks to see if the cookie still exist. If cookie is deleted, userId will not exist
+    return res.redirect('/urls')
+  }
+  
   res.render('register', templateVars);
 })
 
@@ -62,6 +68,19 @@ app.post('/register', (req, res) => {
   const email = req.body.email; // -> let 'email' be the input we revieved when they typed the email
   const password = req.body.password;
   const id = Math.random().toString(36).substring(2,6) // -> ID to identify this paticular user
+
+  // Handle negatives first
+  if (!email || !password) { // -> If they didnt give an email or password,
+    return res.status(400).send('please enter an email address AND a password') // -> return error 400, bad request
+  }
+
+  // If they try to register with an email that already exist, return error message
+  for (const userId in users) { // -> loop in each user in 'users' obj
+    const user = users[userId]; // -> let variable 'user' equal our [obj][user key]
+    if (user.email === email) { // -> if the email in our database is equal to what the user typed,
+      return res.status(400).send('Email address already exist'); // -> variable foundUser will equal the user info that was inputed.
+    }
+  }
 
   const user = { // -> putting all of the info into an object
     id: id,
@@ -152,11 +171,10 @@ app.get("/urls/new", (req, res) => {
   const templateVars = { 
     user: user
   }
-  // IF userId is null, return 403 error message,
+  // IF userId is null, redirect to login page
     if(!userId) { // -> checks to see if the cookie still exist. If cookie is deleted, userId will not exist
       res.status(403)
       return res.redirect('/login')
-      // return res.status(403).send('Please login to create new short URL')
     }
 
   res.render("urls_new", templateVars); // -> Take this page and render it
