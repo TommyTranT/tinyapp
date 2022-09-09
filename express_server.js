@@ -103,6 +103,12 @@ app.get('/login', (req, res) => {
   const templateVars = { 
     user: user
   }
+
+   // IF they try to go to the login page while logged in, redirect to urls
+   if(userId) { // -> checks to see if the cookie still exist. If cookie is deleted, userId will not exist
+    return res.redirect('/urls')
+  }
+
   res.render('login', templateVars);
 })
 
