@@ -14,8 +14,14 @@ app.use(cookieParser());
 //-----------------------------------------------------------------------------------
 // Original Object
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userId: null,
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userId: null,
+  }
 }
 
 // Set Empty Users OBJ
@@ -53,11 +59,26 @@ app.get("/urls", (req, res) => { // -> urls refers to our original object
 
   const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
 
+  // If not logged in, take them to login page. If logged in, go to urls
+  if(!userId) { // -> checks to see if the cookie still exist. If cookie is deleted, userId will not exist
+    return res.redirect('/login')
+  }
+
+  // Filter urlDatabase based on id user cookies
+  let filteredDatabase = {}
+  for(var keys in urlDatabase) {
+    let value = urlDatabase[keys]
+    if(value.userId === userId || value.userId === null) { // -> should filter the url from the users Id
+      filteredDatabase[keys] = value;
+    }
+  }
+
   const templateVars = { 
-    urls: urlDatabase,
+    urls: filteredDatabase, // -> obj of filtered
     user: user
   }
   
+  console.log(filteredDatabase)
   console.log(urlDatabase)
 
   res.render("urls_index", templateVars); // -> Take this template and this data and mash them together
@@ -206,27 +227,62 @@ app.get("/urls/new", (req, res) => {
 
 // Gives new longURL a new ID and adds to our object
 app.post("/urls", (req, res) => {
-  const id = generateRandomString(); // -> id is a random string with our helper function
-  urlDatabase[id] = req.body.longURL  // -> let our object[new id key] to equal the new longURL we made from our post request
+  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+  const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
+
+  let id = generateRandomString(); // -> id is a random string with our helper function
+  urlDatabase[id] = {} // -> adding the new id first before adding the longURL
+  urlDatabase[id].longURL = req.body.longURL  // -> let our longURL to equal the new longURL we made from our post request
+  urlDatabase[id].userId = userId; // -> inputs the cookie id of user into our url database
+  urlDatabase[id].shortUrl = id;
   res.redirect("/urls") // -> redirect us back to display all of our urls
 });
+
 
 // Make a variable page for each different "id" in our object
 app.get("/urls/:id", (req, res) => { // -> ":id" is our variable for our different keys
   const userId = req.cookies.userId; // -> Make variable equals the cookies userId
   const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
  
-  if(!urlDatabase[req.params.id]) { // -> checks to see if the cookie still exist. If cookie is deleted, userId will not exist
+  if(!urlDatabase[req.params.id]) { // -> checks the short url you inputed matches the database
     res.status(403)
-    return res.status(400).send('please enter a valid short url')
+    return res.status(400).send('Please enter a valid short url')
+  }
+
+  if(urlDatabase[req.params.id].userId !== userId) {
+    res.status(400)
+    return res.status(400).send('Dont have access to this short url')
   }
   
   const templateVars = { 
     user: user,
     id: req.params.id, // -> our page will go to whatever 'id' they inputed. 
-    longURL: urlDatabase[req.params.id]};  // < obj[key] will get our longURL value
+    longURL: urlDatabase[req.params.id].longURL}
    
   res.render("urls_show", templateVars); // -> take that template and this data and mash them together
+});
+
+// Takes you away to the long URL
+app.get("/u/:id", (req, res) => { // -> ":id" is our variable for our different keys
+  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+  const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
+ 
+  if(!urlDatabase[req.params.id]) { // -> checks the short url you inputed matches the database
+    res.status(403)
+    return res.status(400).send('Please enter a valid short url')
+  }
+
+  if(urlDatabase[req.params.id].userId !== userId) {
+    res.status(400)
+    return res.status(400).send('Dont have access to this short url')
+  }
+  
+  const templateVars = { 
+    user: user,
+    id: req.params.id, // -> our page will go to whatever 'id' they inputed. 
+    longURL: urlDatabase[req.params.id].longURL}
+   
+  res.render("redirect", templateVars); // -> take that template and this data and mash them together
 });
 
 // Edit POST
@@ -235,7 +291,7 @@ app.post('/urls/:id', (req, res) => {
 
   const newLongURL = req.body.newLongURL; 
 
-  urlDatabase[id] = newLongURL
+  urlDatabase[id].longURL = newLongURL
 
   console.log(urlDatabase);
 
@@ -251,6 +307,22 @@ app.post('/urls/:id/delete', (req, res) => {
   res.redirect('/urls'); // -> redirect back to urls
 })
 
+// // GET /protected
+// app.get('/protected', (req, res) => {
+//   console.log(req.cookies);
+//   const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+
+//   const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
+
+//   const templateVars = {
+//     user: user // -> can use user.email, user.password, or user.id in the template file because we put the whole obj in
+//   };
+
+//   console.log(users);
+//   res.render('protected', templateVars);
+// });
+
+
 //-----------------------------------------------------------------------------------
 // Listening
 app.listen(PORT, () => {
@@ -260,3 +332,4 @@ app.listen(PORT, () => {
 //-----------------------------------------------------------------------------------
 // Notes
 // Short url is hyperlink but doesnt take me anywhere
+// trouble looping through url database and comparing it to userId and just show those.

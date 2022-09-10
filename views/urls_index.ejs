@@ -33,7 +33,7 @@
           <% for (let id in urls) { %> <!-- Loop through each key in our object -->
             <tr>
               <td><%= id %></td>
-              <td><%= urls[id] %></td>
+              <td><%= urls[id].longURL %></td>
               <td>
                 <!-- Lets make a delete button! -->
                 <form action = "/urls/<%= id %>" method="GET"> 
