@@ -17,12 +17,13 @@
     <title>TinyApp</title> 
   </head>
   <body>
+    <div class="card text-center">
     <%- include('partials/_header') %> <!-- Added in every page-->
     <main style="margin: 1em;">
       <h3>Please Login Below</h3>
       
       <form method="POST" action="/login"> 
-        <label>Email:</label>
+        <label>   Email:</label>
         <input name="email" /> 
         <br/>
     
@@ -30,7 +31,7 @@
         <input name="password" />
         <br/>
     
-        <button type="submit">Login</button> 
+        <button class="btn btn-outline-success" type="submit">Login</button> 
     
       </form>
       
@@ -51,5 +52,6 @@
       integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
       crossorigin="anonymous"
     ></script>
+    </div>
   </body>
 </html>

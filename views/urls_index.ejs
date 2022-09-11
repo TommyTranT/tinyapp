@@ -35,12 +35,13 @@
               <td><%= id %></td>
               <td><%= urls[id].longURL %></td>
               <td>
-                <!-- Lets make a delete button! -->
+                <!-- Lets make a edit button! -->
                 <form action = "/urls/<%= id %>" method="GET"> 
                   <button class="btn btn-outline-info" type="submit">Edit</button>
                 </form>
               </td>
               <td>
+                <!-- Lets make a delete button! -->
                 <form action = "/urls/<%= id %>/delete" method="POST"> 
                   <button class="btn btn-outline-danger" type="submit">Delete</button>
                 </form>

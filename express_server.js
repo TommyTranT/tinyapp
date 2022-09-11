@@ -1,15 +1,20 @@
 // SETUP
-const cookieParser = require("cookie-parser");
+const cookieSession = require ('cookie-session')
 const express = require("express"); 
 const morgan = require('morgan')
+const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.set('view engine', 'ejs');
 app.use(express.json())
+app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'gabagool',
+  keys: ['whatever', 'hello'],
+}));
 
 //-----------------------------------------------------------------------------------
 // Original Object
@@ -36,7 +41,7 @@ const generateRandomString = () => {
 // Routes
 // GET / 
 app.get('/', (req, res) => {
-  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+  const userId = req.session.userId; // -> Make variable equals the cookies userId
 
   const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
 
@@ -55,7 +60,7 @@ app.get('/', (req, res) => {
 // Homepage of tinyapp: lists all urls
 app.get("/urls", (req, res) => { // -> urls refers to our original object
 
-  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+  const userId = req.session.userId; // -> Make variable equals the cookies userId
 
   const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
 
@@ -86,7 +91,7 @@ app.get("/urls", (req, res) => { // -> urls refers to our original object
 
 // GET /register    -> User gives us username and password info
 app.get('/register', (req, res) => {
-  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+  const userId = req.session.userId; // -> Make variable equals the cookies userId
 
   const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
 
@@ -121,21 +126,26 @@ app.post('/register', (req, res) => {
     }
   }
 
+  // Hash and salt password
+  const salt = bcrypt.genSaltSync(10);
+  const hash = bcrypt.hashSync(password, salt)
+  
   const user = { // -> putting all of the info into an object
     id: id,
     email: email,
-    password: password,
+    password: hash,
   };
-
+  
   users[id] = user; // -> update our users object with this user. (updating id, email, password)
   console.log(users)
+  console.log(users[id].password);
 
   res.redirect('/login');
 });
 
 // GET /login
 app.get('/login', (req, res) => {
-  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+  const userId = req.session.userId; // -> Make variable equals the cookies userId
 
   const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
 
@@ -156,11 +166,12 @@ app.post('/login', (req, res) => {
   const email = req.body.email; // -> let email be the email they inputted
   const password = req.body.password;
 
+  
   // Handle negatives first
   if (!email || !password) { // -> If they didnt give an email or password,
     return res.status(400).send('please enter an email address AND a password') // -> return error 400, bad request
   }
-
+  
   // Look up the user in the users database
   let foundUser = null;
   for (const userId in users) { // -> loop in each user in 'users' obj
@@ -169,47 +180,36 @@ app.post('/login', (req, res) => {
       foundUser = user; // -> variable foundUser will equal the user info that was inputed.
     }
   }
-  // If the user did not match
+
   if (!foundUser) {
     return res.status(403).send('no user with that email exists');
   }
 
+  // Compare typed password with hashed password in databaseß
+  const result = bcrypt.compareSync(password, foundUser.password)
+  
   // Check if passwords match
-  if (foundUser.password !== password) { // -> if the users password does not equal what was inputed,
+  if (!result) { // -> if the users password does not equal what was inputed,
     return res.status(401).send('wrong password'); // -> return error message
   }
   // We found a user, now we need to set the cookie
-  res.cookie('userId', foundUser.id); // -> setting our cookie to equal the 'id' we randomly generated for each user
+
+  // -> setting our cookie to equal the 'id' we randomly generated for each user
+  req.session.userId = foundUser.id;
 
   // send user somewhere
   res.redirect('/urls');
 });
 
-// GET /protected
-app.get('/protected', (req, res) => {
-  console.log(req.cookies);
-  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
-
-  const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
-
-  const templateVars = {
-    user: user // -> can use user.email, user.password, or user.id in the template file because we put the whole obj in
-  };
-
-  console.log(users);
-  res.render('protected', templateVars);
-});
-
 // POST /logout  
 app.post('/logout', (req, res) => {
-  res.clearCookie('userId');
-
+  req.session = null;
   res.redirect('/urls');
 })
 
 // New URL Page: lets make a new short url
 app.get("/urls/new", (req, res) => { 
-  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+  const userId = req.session.userId; // -> Make variable equals the cookies userId
 
   const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
 
@@ -227,7 +227,7 @@ app.get("/urls/new", (req, res) => {
 
 // Gives new longURL a new ID and adds to our object
 app.post("/urls", (req, res) => {
-  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+  const userId = req.session.userId; // -> Make variable equals the cookies userId
   const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
 
   let id = generateRandomString(); // -> id is a random string with our helper function
@@ -238,10 +238,9 @@ app.post("/urls", (req, res) => {
   res.redirect("/urls") // -> redirect us back to display all of our urls
 });
 
-
 // Make a variable page for each different "id" in our object
 app.get("/urls/:id", (req, res) => { // -> ":id" is our variable for our different keys
-  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+  const userId = req.session.userId; // -> Make variable equals the cookies userId
   const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
  
   if(!urlDatabase[req.params.id]) { // -> checks the short url you inputed matches the database
@@ -264,7 +263,7 @@ app.get("/urls/:id", (req, res) => { // -> ":id" is our variable for our differe
 
 // Takes you away to the long URL
 app.get("/u/:id", (req, res) => { // -> ":id" is our variable for our different keys
-  const userId = req.cookies.userId; // -> Make variable equals the cookies userId
+  const userId = req.session.userId; // -> Make variable equals the cookies userId
   const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
  
   if(!urlDatabase[req.params.id]) { // -> checks the short url you inputed matches the database
@@ -307,22 +306,6 @@ app.post('/urls/:id/delete', (req, res) => {
   res.redirect('/urls'); // -> redirect back to urls
 })
 
-// // GET /protected
-// app.get('/protected', (req, res) => {
-//   console.log(req.cookies);
-//   const userId = req.cookies.userId; // -> Make variable equals the cookies userId
-
-//   const user = users[userId]; // -> Make user the obj users with the key that we got from the cookie
-
-//   const templateVars = {
-//     user: user // -> can use user.email, user.password, or user.id in the template file because we put the whole obj in
-//   };
-
-//   console.log(users);
-//   res.render('protected', templateVars);
-// });
-
-
 //-----------------------------------------------------------------------------------
 // Listening
 app.listen(PORT, () => {
@@ -330,6 +313,3 @@ app.listen(PORT, () => {
 });
 
 //-----------------------------------------------------------------------------------
-// Notes
-// Short url is hyperlink but doesnt take me anywhere
-// trouble looping through url database and comparing it to userId and just show those.
