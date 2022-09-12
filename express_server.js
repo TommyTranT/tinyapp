@@ -18,16 +18,7 @@ app.use(cookieSession({
 
 //-----------------------------------------------------------------------------------
 // Original Object
-const urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userId: null,
-  },
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    userId: null,
-  }
-}
+const urlDatabase = {}
 
 // Set Empty Users OBJ
 const users = {};
@@ -66,12 +57,12 @@ app.get("/urls", (req, res) => { // -> urls refers to our original object
 
   // If not logged in, take them to login page. If logged in, go to urls
   if(!userId) { // -> checks to see if the cookie still exist. If cookie is deleted, userId will not exist
-    return res.redirect('/login')
+    return res.status(400).send('please login to visit URL')
   }
 
   // Filter urlDatabase based on id user cookies
   let filteredDatabase = {}
-  for(var keys in urlDatabase) {
+  for(let keys in urlDatabase) {
     let value = urlDatabase[keys]
     if(value.userId === userId || value.userId === null) { // -> should filter the url from the users Id
       filteredDatabase[keys] = value;
@@ -140,7 +131,7 @@ app.post('/register', (req, res) => {
   console.log(users)
   console.log(users[id].password);
 
-  res.redirect('/login');
+  res.redirect('/urls');
 });
 
 // GET /login
@@ -271,11 +262,7 @@ app.get("/u/:id", (req, res) => { // -> ":id" is our variable for our different 
     return res.status(400).send('Please enter a valid short url')
   }
 
-  if(urlDatabase[req.params.id].userId !== userId) {
-    res.status(400)
-    return res.status(400).send('Dont have access to this short url')
-  }
-  
+ 
   const templateVars = { 
     user: user,
     id: req.params.id, // -> our page will go to whatever 'id' they inputed. 
