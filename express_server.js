@@ -103,7 +103,7 @@ app.post('/register', (req, res) => {
   const email = req.body.email; // -> let 'email' be the input we revieved when they typed the email
   const password = req.body.password;
   const id = Math.random().toString(36).substring(2,6) // -> ID to identify this paticular user
-
+  req.session.userId = id
   // Handle negatives first
   if (!email || !password) { // -> If they didnt give an email or password,
     return res.status(400).send('please enter an email address AND a password') // -> return error 400, bad request
