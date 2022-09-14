@@ -1,15 +1,25 @@
-# Welcome to TinyApp by Tommy Tran
+# TinyApp Project
 
-# Installation requirements
+TinyApp is a full stack web application built with Node and Express that allows users to shorten long URLs (à la bit.ly).
 
-This program requires the following to be downloaded
+## Final Product
 
-    "bcrypt": "^5.0.1",
-    "bcryptjs": "^2.4.3",
-    "cookie-parser": "^1.4.6",
-    "cookie-session": "^2.0.0",
-    "ejs": "^3.1.8",
-    "express": "^4.18.1",
-    "morgan": "^1.10.0",
-    "popups": "^1.1.3"
+!["Screenshot of URLs page"](https://github.com/haitran1995/tinyapp/blob/main/docs/create-page.png?raw=true)
+!["Screenshot of create new URL page"](https://github.com/haitran1995/tinyapp/blob/main/docs/urls-page.png?raw=true)
+
+## Dependencies
+
+- bcrypt
+- bcryptjs
+- cookie-parser
+- cookie-session
+- ejs
+- express
+- morgan
+- popups
+
+## Getting Started
+
+- Install all dependencies (using the `npm install` command).
+- Run the development web server using the `node express_server.js` command.
 
