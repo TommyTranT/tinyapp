@@ -226,7 +226,8 @@ app.post("/urls", (req, res) => {
   urlDatabase[id].longURL = req.body.longURL  // -> let our longURL to equal the new longURL we made from our post request
   urlDatabase[id].userId = userId; // -> inputs the cookie id of user into our url database
   urlDatabase[id].shortUrl = id;
-  res.redirect("/urls") // -> redirect us back to display all of our urls
+  
+  res.redirect(`/urls/${id}`) // -> redirect to the urls/:id
 });
 
 // Make a variable page for each different "id" in our object
